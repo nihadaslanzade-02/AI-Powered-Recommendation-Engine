@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,plots]"
+
+      - name: Install the optional legacy baseline
+        # scikit-surprise needs a wheel for the interpreter or a working
+        # toolchain to build one, and it has neither everywhere. The tests
+        # that use it skip when it is missing, which is why it is an extra
+        # rather than a dependency.
+        continue-on-error: true
+        run: pip install "scikit-surprise>=1.1.4"
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Import every module
+        # Catches an import-time error even in a module no test exercises.
+        run: |
+          python -c "
+          import importlib, pkgutil
+          import recengine
+          for module in pkgutil.walk_packages(recengine.__path__, 'recengine.'):
+              importlib.import_module(module.name)
+              print('ok', module.name)
+          "
+
+      - name: Test
+        run: pytest -q
+
+  end-to-end:
+    # Trains a model from the committed data.csv and queries the service, so a
+    # break in the path from raw file to HTTP response cannot pass unnoticed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,plots]"
+
+      - name: Train
+        run: python scripts/train.py
+
+      - name: Query the service
+        run: |
+          python - <<'PY'
+          from recengine.api import create_app
+
+          client = create_app().test_client()
+
+          health = client.get("/health")
+          assert health.status_code == 200, health.get_json()
+          print("health:", health.get_json()["model"], health.get_json()["n_users"], "customers")
+
+          first = client.get("/recommend?user_id=17850&k=10").get_json()
+          second = client.get("/recommend?user_id=12347&k=10").get_json()
+          assert len(first["recommendations"]) == 10, first
+          assert [r["stock_code"] for r in first["recommendations"]] != [
+              r["stock_code"] for r in second["recommendations"]
+          ], "two customers received an identical list"
+
+          assert client.get("/recommend?user_id=99999999").status_code == 404
+          assert client.get("/recommend?user_id=oops").status_code == 400
+          print("recommendations differ between customers, error codes correct")
+          PY
+
+      - name: Evaluate
+        # Skips the cutoff sweep and the figures; this is a smoke test of the
+        # pipeline, not a rerun of the published results.
+        run: python scripts/evaluate.py --no-sweep --no-figures

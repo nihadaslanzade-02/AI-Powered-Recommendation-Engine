@@ -75,6 +75,14 @@ class Recommender(ABC):
         do; the requirement is that there *is* one, so that a model emitting
         constant scores produces an obviously arbitrary list rather than one
         that quietly looks sorted.
+
+        This uses a full stable sort rather than ``argpartition``. Partitioning
+        is the faster way to take a top k, but it only promises the k largest
+        *values*: which of several equally scored products it hands back is
+        unspecified, so a model with tied scores would return a different list
+        from one call to the next. Sorting the whole row costs a few hundred
+        milliseconds across the entire customer base, which is not worth
+        trading for a ranking that cannot be reproduced.
         """
         if self.train is None:
             raise RuntimeError(f"{self.name} has not been fitted")
@@ -92,11 +100,9 @@ class Recommender(ABC):
             for i, row in enumerate(rows):
                 scores[i, self.train.seen_items(row)] = -np.inf
 
-        candidates = np.argpartition(-scores, kth=k - 1, axis=1)[:, :k]
-        candidates = np.sort(candidates, axis=1)
-        top = np.take_along_axis(scores, candidates, axis=1)
-        order = np.argsort(-top, axis=1, kind="stable")
-        return np.take_along_axis(candidates, order, axis=1)
+        # Stable sort keeps equally scored products in column order, which is
+        # ascending index, so the tie-breaking rule needs no extra key.
+        return np.argsort(-scores, axis=1, kind="stable")[:, :k]
 
 
 class PopularityRecommender(Recommender):
