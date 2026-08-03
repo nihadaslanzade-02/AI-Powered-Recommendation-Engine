@@ -1,0 +1,11 @@
+# Normalise line endings. This machine has core.autocrlf=true, which would
+# otherwise commit CRLF into files that must stay LF to work inside the
+# Linux container.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.pdf binary
+*.joblib binary
+*.npz binary
+*.xlsx binary

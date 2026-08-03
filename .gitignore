@@ -7,3 +7,18 @@ __pycache__/
 *.db
 .DS_Store
 *.ipynb_checkpoints
+
+# Local virtual environments
+.venv/
+venv/
+env/
+
+# Trained model artifacts. Rebuild with `python scripts/train.py`; they are
+# derived from data.csv and would otherwise be large binaries in the history.
+artifacts/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage

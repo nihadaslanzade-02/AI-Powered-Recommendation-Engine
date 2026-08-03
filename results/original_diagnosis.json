@@ -1,0 +1,96 @@
+{
+  "target_vs_declared_scale": {
+    "n_rows": 397884,
+    "min": -0.06684957445675406,
+    "median": -0.038968256244874204,
+    "max": 451.57704787614273,
+    "share_inside_declared_0_1": 0.16033567572458304,
+    "share_below_zero": 0.8343135185129334
+  },
+  "split_leakage": {
+    "n_rows": 397884,
+    "n_distinct_pairs": 266792,
+    "share_rows_in_a_repeated_pair": 0.492882347618904,
+    "analytic_leak_rate": 0.43714915834983387,
+    "empirical_leak_rate_mean": 0.43695147329372386,
+    "empirical_leak_rate_sd": 0.0015356049375701481,
+    "n_seeds": 5
+  },
+  "accuracy_across_seeds": [
+    {
+      "seed": 0,
+      "rmse": 1.0314368964252978,
+      "mae": 1.0147077307994496,
+      "constant_predictor_rmse": 0.24195839570288485,
+      "share_pinned_at_upper_bound": 1.0,
+      "share_pinned_at_lower_bound": 0.0,
+      "n_distinct_estimates": 1,
+      "share_targets_outside_declared_scale": 0.8404962250304109
+    },
+    {
+      "seed": 1,
+      "rmse": 1.9525475137836321,
+      "mae": 0.07801436011108434,
+      "constant_predictor_rmse": 1.9567242571363488,
+      "share_pinned_at_upper_bound": 0.0024328698816740556,
+      "share_pinned_at_lower_bound": 0.6745885735541012,
+      "n_distinct_estimates": 27726,
+      "share_targets_outside_declared_scale": 0.8381839933246876
+    },
+    {
+      "seed": 2,
+      "rmse": 1.6639889483544572,
+      "mae": 1.0189480726573794,
+      "constant_predictor_rmse": 1.3316867677337876,
+      "share_pinned_at_upper_bound": 1.0,
+      "share_pinned_at_lower_bound": 0.0,
+      "n_distinct_estimates": 1,
+      "share_targets_outside_declared_scale": 0.8397321832493893
+    },
+    {
+      "seed": 3,
+      "rmse": 1.0318438754099686,
+      "mae": 1.0153551956176428,
+      "constant_predictor_rmse": 0.24358137497748097,
+      "share_pinned_at_upper_bound": 1.0,
+      "share_pinned_at_lower_bound": 0.0,
+      "n_distinct_estimates": 1,
+      "share_targets_outside_declared_scale": 0.8383649505886138
+    },
+    {
+      "seed": 4,
+      "rmse": 1.028144012363238,
+      "mae": 1.0149314493561403,
+      "constant_predictor_rmse": 0.22956777101348136,
+      "share_pinned_at_upper_bound": 1.0,
+      "share_pinned_at_lower_bound": 0.0,
+      "n_distinct_estimates": 1,
+      "share_targets_outside_declared_scale": 0.8390988328256477
+    }
+  ],
+  "personalisation": {
+    "n_users_probed": 8,
+    "n_distinct_top10_lists": 1,
+    "max_estimate_spread_within_a_top10": 0.0,
+    "example_top10": [
+      "10002",
+      "10080",
+      "10120",
+      "10123C",
+      "10124A",
+      "10124G",
+      "10125",
+      "10133",
+      "10135",
+      "11001"
+    ],
+    "equals_alphabetically_first_unseen": true,
+    "pivot_shape": [
+      4338,
+      3665
+    ],
+    "share_pivot_cells_exactly_zero": 0.9832193308035779,
+    "median_scaled_quantity_of_a_real_purchase": -0.050120783529626144,
+    "share_real_purchases_below_the_zero_fill": 0.8344065789079133
+  }
+}
