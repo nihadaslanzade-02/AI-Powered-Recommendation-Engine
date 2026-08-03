@@ -1,18 +1,33 @@
-version: '3'
+# The `version` key is obsolete in Compose v2 and only produces a warning.
 services:
   flask:
     build: .
-    container_name: flask
+    container_name: recengine-flask
     expose:
       - "5000"
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "8080:80"  # Change this line
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - flask
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health').read()
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
 
- 
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: recengine-nginx
+    ports:
+      # The service is reached on http://localhost:8080, not 5000. The README
+      # said 5000 for as long as this file said 8080.
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      flask:
+        # Wait for the model to load rather than proxying to a 502.
+        condition: service_healthy
+    restart: unless-stopped

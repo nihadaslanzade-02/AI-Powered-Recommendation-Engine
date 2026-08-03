@@ -1,0 +1,26 @@
+# The build context is copied to the daemon before anything runs, so keeping
+# the local virtualenv out of it matters: it is larger than the finished image.
+.venv/
+venv/
+env/
+
+.git/
+.github/
+.gitignore
+.gitattributes
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Rebuilt inside the image by scripts/train.py.
+artifacts/
+
+# Analysis output, not needed to serve.
+results/
+tests/
+my-prod-recom.ipynb
