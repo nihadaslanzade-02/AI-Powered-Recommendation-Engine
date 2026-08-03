@@ -25,7 +25,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-from surprise import Dataset, Reader, SVD, accuracy
+from surprise import SVD, Dataset, Reader, accuracy
 from surprise.model_selection import train_test_split
 
 ROOT = Path(__file__).resolve().parents[1]
