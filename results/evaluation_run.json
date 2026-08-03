@@ -1,0 +1,25 @@
+{
+  "recengine_version": "0.2.0",
+  "python": "3.11.9",
+  "numpy": "2.4.6",
+  "pandas": "3.0.5",
+  "seed": 0,
+  "ks": [
+    5,
+    10,
+    20
+  ],
+  "cutoff": "2011-11-09",
+  "train_rows": 330132,
+  "test_rows": 66205,
+  "train_users": 4063,
+  "train_items": 3618,
+  "train_interactions": 230662,
+  "train_density": 0.015691,
+  "evaluable_users": 1287,
+  "relevant_per_user_median": 13.0,
+  "relevant_per_user_mean": 20.56,
+  "legacy_diverged": {
+    "LegacySVD": true
+  }
+}
