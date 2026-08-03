@@ -22,3 +22,7 @@ artifacts/
 .ruff_cache/
 htmlcov/
 .coverage
+recengine.egg-info/
+*.egg-info/
+build/
+dist/
