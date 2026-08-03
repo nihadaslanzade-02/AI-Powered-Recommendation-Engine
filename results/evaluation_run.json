@@ -9,6 +9,13 @@
     10,
     20
   ],
+  "models": [
+    "Popularity",
+    "ItemKNN",
+    "PureSVD",
+    "LegacySVD"
+  ],
+  "legacy_baseline_included": true,
   "cutoff": "2011-11-09",
   "train_rows": 330132,
   "test_rows": 66205,

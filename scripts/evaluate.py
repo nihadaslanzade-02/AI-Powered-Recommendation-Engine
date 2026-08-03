@@ -43,7 +43,11 @@ from recengine.data import (  # noqa: E402
     temporal_split,
 )
 from recengine.evaluate import DEFAULT_KS, evaluate_model  # noqa: E402
-from recengine.models import LegacySVDRecommender, default_models  # noqa: E402
+from recengine.models import (  # noqa: E402
+    LegacySVDRecommender,
+    default_models,
+    legacy_available,
+)
 
 RESULTS = ROOT / "results"
 FIGURES = RESULTS / "figures"
@@ -86,6 +90,8 @@ def run_comparison(
 
     sizes = np.array([len(v) for v in relevant.values()])
     context = {
+        "models": [m.name for m in default_models(random_state=seed)],
+        "legacy_baseline_included": legacy_available(),
         "cutoff": cutoff,
         "train_rows": int(len(train_frame)),
         "test_rows": int(len(test_frame)),
@@ -199,7 +205,13 @@ def main() -> None:
 
     print("loading data.csv")
     frame = load_transactions()
-    print(f"  {len(frame):,} usable transaction rows\n")
+    print(f"  {len(frame):,} usable transaction rows")
+    if not legacy_available():
+        print(
+            "  note: scikit-surprise is not installed, so the LegacySVD baseline\n"
+            "        is omitted. Install it with: pip install -e \".[legacy]\""
+        )
+    print()
 
     print(f"comparison at cutoff {args.cutoff}")
     metrics, context = run_comparison(frame, args.cutoff, ks, args.seed)

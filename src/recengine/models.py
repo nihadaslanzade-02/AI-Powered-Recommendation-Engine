@@ -29,6 +29,7 @@ justify the one below it:
 
 from __future__ import annotations
 
+import importlib.util
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -337,7 +338,14 @@ def _inner_ids(raw_ids: np.ndarray, trainset, users: bool) -> np.ndarray:
     )
 
 
-def default_models(random_state: int = 0) -> list[Recommender]:
+def legacy_available() -> bool:
+    """Whether the optional Surprise dependency can be imported."""
+    return importlib.util.find_spec("surprise") is not None
+
+
+def default_models(
+    random_state: int = 0, include_legacy: bool | None = None
+) -> list[Recommender]:
     """The lineup used by ``scripts/evaluate.py``.
 
     ``LegacySVDRecommender`` is included with ``clip=True`` because that is what
@@ -349,10 +357,21 @@ def default_models(random_state: int = 0) -> list[Recommender]:
     Whether an SVD can work here at all is already answered by
     ``PureSVDRecommender``, which is the same family of model pointed at a
     target that means something.
+
+    ``include_legacy`` defaults to whether Surprise is installed. It is an
+    optional extra with no wheel for every interpreter, so a comparison that
+    hard-required it would fail everywhere it is missing rather than simply
+    running one model short. Pass ``True`` to insist on it and get the
+    ImportError instead of a quiet omission.
     """
-    return [
+    if include_legacy is None:
+        include_legacy = legacy_available()
+
+    models: list[Recommender] = [
         PopularityRecommender(),
         ItemKNNRecommender(n_neighbours=200),
         PureSVDRecommender(n_factors=50, random_state=random_state),
-        LegacySVDRecommender(random_state=random_state, clip=True),
     ]
+    if include_legacy:
+        models.append(LegacySVDRecommender(random_state=random_state, clip=True))
+    return models

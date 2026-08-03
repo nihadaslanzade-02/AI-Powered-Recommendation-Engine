@@ -193,7 +193,9 @@ python scripts/evaluate.py
 
 `scikit-surprise` is an optional extra because only `LegacySVD` needs it and it
 has no wheel for every interpreter. The service and the test suite install
-without it.
+without it, and `scripts/evaluate.py` then runs the other three models and says
+so, rather than failing. `results/evaluation_run.json` records which models a
+given table came from.
 
 ## Layout
 
@@ -216,7 +218,7 @@ without it.
 pytest
 ```
 
-57 tests in about four seconds, on synthetic fixtures rather than the real file.
+59 tests in about three seconds, on synthetic fixtures rather than the real file.
 The fixture is built so the right answer follows from its construction *and* so
 that a popularity baseline gets it wrong: two communities of customers who never
 buy across the boundary, with the larger community's products more popular than

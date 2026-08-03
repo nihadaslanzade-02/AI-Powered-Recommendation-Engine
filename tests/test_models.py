@@ -206,9 +206,33 @@ def test_itemknn_neighbour_truncation_drops_the_weakest_links():
     assert kept.tolist() == [2]
 
 
+def test_default_lineup_always_has_the_three_core_models():
+    names = [m.name for m in default_models(include_legacy=False)]
+    assert names == ["Popularity", "ItemKNN", "PureSVD"]
+
+
 def test_default_lineup_excludes_the_unrankable_legacy_variant():
-    names = [m.name for m in default_models()]
+    """Only the clipped legacy model is in the lineup.
+
+    The unclipped one diverges to NaN on the real target, so there is nothing
+    to rank; that is recorded through the `diverged` property instead.
+    """
+    names = [m.name for m in default_models(include_legacy=True)]
     assert names == ["Popularity", "ItemKNN", "PureSVD", "LegacySVD"]
+    assert "LegacySVD (unclipped)" not in names
+
+
+def test_legacy_is_included_exactly_when_surprise_is_installed():
+    """The evaluation must degrade to three models, not fail, without the extra.
+
+    scikit-surprise is an optional extra with no wheel for every interpreter.
+    A comparison that hard-required it would fail everywhere it is missing
+    rather than simply running one model short.
+    """
+    from recengine.models import legacy_available
+
+    has_legacy = any(m.name == "LegacySVD" for m in default_models())
+    assert has_legacy == legacy_available()
 
 
 # --- the legacy baseline -----------------------------------------------------
