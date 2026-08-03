@@ -251,26 +251,37 @@ def test_legacy_bulk_scoring_matches_surprise_predict(split):
                 assert actual == pytest.approx(expected, abs=1e-9)
 
 
+def test_legacy_scores_stay_inside_the_declared_scale(split):
+    train_frame, train, _ = split
+    clipped = _legacy(random_state=0, clip=True).fit(train, train_frame)
+    scores = clipped.score(np.arange(train.n_users))
+    assert not np.isnan(scores).any()
+    assert (scores >= 0).all() and (scores <= 1).all()
+
+
 def test_legacy_clipping_maps_nan_to_the_upper_bound(split):
     """Surprise clips with Python's min/max, and min(1, nan) returns 1.
 
     Reproducing that quirk is the point of the model: it is what let a fit
-    whose every parameter is NaN report a confident in-range prediction.
-    numpy.clip would propagate the NaN instead.
+    whose every parameter is NaN report a confident in-range prediction of
+    exactly 1.0. numpy.clip would propagate the NaN instead.
+
+    The NaN is injected rather than waited for. On the real data this fit
+    diverges on its own, but the toy fixture is far too small and well behaved
+    to blow up, so relying on divergence here would leave the branch untested.
     """
     train_frame, train, _ = split
-    clipped = _legacy(random_state=0, clip=True).fit(train, train_frame)
-    raw = _legacy(random_state=0, clip=False).fit(train, train_frame)
-
     rows = np.arange(train.n_users)
-    clipped_scores = clipped.score(rows)
-    raw_scores = raw.score(rows)
 
-    assert not np.isnan(clipped_scores).any()
-    diverged_cells = np.isnan(raw_scores)
-    if diverged_cells.any():
-        assert (clipped_scores[diverged_cells] == 1.0).all()
-    assert (clipped_scores >= 0).all() and (clipped_scores <= 1).all()
+    clipped = _legacy(random_state=0, clip=True).fit(train, train_frame)
+    clipped.item_bias_[:] = np.nan
+    scores = clipped.score(rows)
+    assert not np.isnan(scores).any()
+    assert (scores == 1.0).all()
+
+    raw = _legacy(random_state=0, clip=False).fit(train, train_frame)
+    raw.item_bias_[:] = np.nan
+    assert np.isnan(raw.score(rows)).all()
 
 
 def test_legacy_reports_whether_it_diverged(split):

@@ -103,6 +103,16 @@ def toy_csv(tmp_path, toy_frame) -> str:
                 "Quantity": 7, "InvoiceDate": TRAIN_DATE, "UnitPrice": 1.5,
                 "CustomerID": 1000.0, "Country": "United Kingdom",
             },
+            # Customer 1000 buys A1 again after the cutoff. A1 is already in
+            # their training history, so it must not count as something the
+            # recommender was supposed to predict: the models exclude products
+            # the customer already has, so scoring it would count an
+            # unreachable hit as a miss.
+            {
+                "InvoiceNo": "900006", "StockCode": "A1", "Description": "PRODUCT A1",
+                "Quantity": 4, "InvoiceDate": TEST_DATE, "UnitPrice": 1.5,
+                "CustomerID": 1000.0, "Country": "United Kingdom",
+            },
         ]
     )
     path = tmp_path / "toy.csv"

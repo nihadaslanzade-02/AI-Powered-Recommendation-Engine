@@ -93,6 +93,12 @@ def test_no_relevant_item_is_already_in_the_training_history(toy_csv):
         overlap = np.intersect1d(items, train.seen_items(row))
         assert overlap.size == 0
 
+    # The fixture has customer 1000 rebuying A1 after the cutoff, so this is
+    # actually exercised rather than being vacuously true.
+    row = train.user_index[1000]
+    assert train.item_index["A1"] in set(train.seen_items(row))
+    assert train.item_index["A1"] not in set(relevant[row])
+
 
 def test_heldout_drops_customers_and_products_absent_from_training(toy_csv):
     frame = load_transactions(toy_csv)
