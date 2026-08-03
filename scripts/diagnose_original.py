@@ -109,12 +109,33 @@ def fit_original(data: pd.DataFrame, seed: int):
     return algo, trainset, testset
 
 
+def diverged(algo) -> bool:
+    """Did training produce NaN parameters instead of a model?
+
+    With the target left as a z-score reaching 451, a residual of that size
+    times a learning rate of 0.005 is enough to send the factor updates to
+    infinity within the first epochs, and inf minus inf is NaN from there on.
+    """
+    return bool(
+        np.isnan(algo.pu).any()
+        or np.isnan(algo.qi).any()
+        or np.isnan(algo.bu).any()
+        or np.isnan(algo.bi).any()
+    )
+
+
 def accuracy_across_seeds(data: pd.DataFrame) -> list[dict]:
     """RMSE per seed, next to the RMSE of simply predicting the train mean.
 
-    Also records how much of the prediction vector sits on a clip bound.
-    Surprise clamps estimates to the declared rating_scale, so an estimate of
-    exactly 0.0 or exactly 1.0 means the model wanted to go outside it.
+    Also records whether the fit diverged, and how much of the prediction
+    vector sits on a clip bound.
+
+    These two turn out to be the same question. Surprise clamps estimates with
+    Python's builtin ``min`` and ``max``, and ``min(1, nan)`` returns 1: ``nan
+    < 1`` is False, so ``min`` falls through to its first argument. A model
+    whose every parameter is NaN therefore reports a prediction of exactly 1.0
+    with ``was_impossible`` set to False, and looks from the outside like a
+    confident one.
     """
     rows = []
     for seed in SEEDS:
@@ -125,6 +146,7 @@ def accuracy_across_seeds(data: pd.DataFrame) -> list[dict]:
         rows.append(
             {
                 "seed": seed,
+                "diverged_to_nan": diverged(algo),
                 "rmse": float(accuracy.rmse(preds, verbose=False)),
                 "mae": float(accuracy.mae(preds, verbose=False)),
                 "constant_predictor_rmse": float(
@@ -219,7 +241,8 @@ def main() -> None:
     print("accuracy, and what a constant predictor would have scored:")
     for r in report["accuracy_across_seeds"]:
         print(
-            f"  seed {r['seed']}  RMSE {r['rmse']:.4f}  vs constant "
+            f"  seed {r['seed']}  diverged {str(r['diverged_to_nan']):5s}  "
+            f"RMSE {r['rmse']:.4f}  vs constant "
             f"{r['constant_predictor_rmse']:.4f}   pinned high "
             f"{r['share_pinned_at_upper_bound']:.1%}  pinned low "
             f"{r['share_pinned_at_lower_bound']:.1%}  distinct estimates "
@@ -228,7 +251,9 @@ def main() -> None:
     beaten = sum(
         r["rmse"] > r["constant_predictor_rmse"] for r in report["accuracy_across_seeds"]
     )
-    print(f"  seeds where the constant predictor wins: {beaten}/{len(SEEDS)}\n")
+    n_diverged = sum(r["diverged_to_nan"] for r in report["accuracy_across_seeds"])
+    print(f"  seeds where the constant predictor wins: {beaten}/{len(SEEDS)}")
+    print(f"  seeds where every learned parameter is NaN: {n_diverged}/{len(SEEDS)}\n")
 
     report["personalisation"] = personalisation_check(data)
     p = report["personalisation"]
